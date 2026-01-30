@@ -1,0 +1,115 @@
+import streamlit as st
+from groq import Groq
+from PIL import Image
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+GROQ_API_KEY = os.getenv("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")
+
+client = Groq(api_key=GROQ_API_KEY)
+
+st.set_page_config(
+    page_title="AI Multi-Tool Assistant",
+    page_icon="🤖",
+    layout="wide"
+)
+
+st.markdown("""
+<style>
+.main-title {
+    font-size: 40px;
+    font-weight: 700;
+}
+.subtitle {
+    color: gray;
+    font-size: 18px;
+}
+.card {
+    padding: 20px;
+    border-radius: 12px;
+    background-color: #f7f9fc;
+    box-shadow: 0px 0px 10px rgba(0,0,0,0.05);
+}
+</style>
+""", unsafe_allow_html=True)
+
+st.sidebar.title("🧠 AI Tools")
+page = st.sidebar.radio(
+    "Select Feature",
+    ["Chatbot", "Language Translation", "Image Analysis"]
+)
+
+st.sidebar.markdown("---")
+st.sidebar.caption("Powered by Groq LLaMA 3.3 70B")
+
+def groq_chat(prompt):
+    response = client.chat.completions.create(
+        model="llama-3.3-70b-versatile",
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0.4,
+        max_tokens=1024
+    )
+    return response.choices[0].message.content
+
+if page == "Chatbot":
+    st.markdown('<div class="main-title">💬 AI Chatbot</div>', unsafe_allow_html=True)
+    st.markdown('<div class="subtitle">Ask anything. Powered by LLaMA 3.3 70B</div>', unsafe_allow_html=True)
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    user_input = st.text_area("Enter your message", height=150)
+
+    if st.button("Generate Response"):
+        if user_input.strip():
+            with st.spinner("Thinking..."):
+                answer = groq_chat(user_input)
+            st.markdown("### 🤖 Response")
+            st.write(answer)
+        else:
+            st.warning("Please enter a message.")
+
+elif page == "Language Translation":
+    st.markdown('<div class="main-title">🌍 Language Translation</div>', unsafe_allow_html=True)
+    st.markdown('<div class="subtitle">Translate text into any language</div>', unsafe_allow_html=True)
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    text = st.text_area("Enter text to translate", height=120)
+    target_language = st.text_input("Target Language (e.g., French, Hindi, German)")
+
+    if st.button("Translate"):
+        if text and target_language:
+            prompt = f"Translate the following text into {target_language}:\n\n{text}"
+            with st.spinner("Translating..."):
+                translated = groq_chat(prompt)
+            st.markdown("### 🌐 Translated Text")
+            st.write(translated)
+        else:
+            st.warning("Please enter text and target language.")
+
+elif page == "Image Analysis":
+    st.markdown('<div class="main-title">🖼️ Image Analysis</div>', unsafe_allow_html=True)
+    st.markdown('<div class="subtitle">Describe, analyze, or extract insights from images</div>', unsafe_allow_html=True)
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    uploaded_image = st.file_uploader("Upload an image", type=["jpg", "png", "jpeg"])
+
+    if uploaded_image:
+        image = Image.open(uploaded_image)
+        st.image(image, caption="Uploaded Image", use_container_width=True)
+
+        image_prompt = st.text_area(
+            "What do you want to know about this image?",
+            value="Describe this image in detail."
+        )
+
+        if st.button("Analyze Image"):
+            prompt = f"""
+            The user uploaded an image.
+            Task: {image_prompt}
+            Provide a detailed and professional response.
+            """
+            with st.spinner("Analyzing image..."):
+                result = groq_chat(prompt)
+
+            st.markdown("### 🔍 Analysis Result")
+            st.write(result)
