@@ -5,13 +5,12 @@ import os
 from dotenv import load_dotenv
 
 load_dotenv()
-GROQ_API_KEY = os.getenv("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")
-
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 client = Groq(api_key=GROQ_API_KEY)
 
 st.set_page_config(
     page_title="NovaMind AI",
-    page_icon="🤖",
+    page_icon="\U0001f916",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -19,510 +18,162 @@ st.set_page_config(
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+    * { margin:0; padding:0; box-sizing:border-box; }
 
-    * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-    }
+    .stApp { background:#0a0c0f; color:#e2e8f0; font-family:'Outfit',sans-serif; min-height:100vh; }
+    .stApp::before { content:''; position:fixed; top:-200px; left:-200px; width:600px; height:600px; background:radial-gradient(circle,rgba(99,102,241,0.12) 0%,transparent 70%); pointer-events:none; z-index:0; }
+    .stApp::after  { content:''; position:fixed; bottom:-250px; right:-200px; width:700px; height:700px; background:radial-gradient(circle,rgba(16,185,129,0.10) 0%,transparent 70%); pointer-events:none; z-index:0; }
 
-    /* ─── Full Dark Theme ─── */
-    .stApp {
-        background: #0a0c0f;
-        color: #e2e8f0;
-        font-family: 'Outfit', sans-serif;
-        min-height: 100vh;
-    }
+    /* Sidebar */
+    .stSidebar { background:#0e1015 !important; border-right:1px solid rgba(255,255,255,0.06); }
+    .sidebar-brand { display:flex; align-items:center; gap:12px; padding:24px 20px 18px; border-bottom:1px solid rgba(255,255,255,0.07); margin-bottom:16px; }
+    .sidebar-brand .brand-icon { width:42px; height:42px; border-radius:12px; background:linear-gradient(135deg,#6366f1,#8b5cf6); display:flex; align-items:center; justify-content:center; font-size:20px; box-shadow:0 4px 20px rgba(99,102,241,0.35); }
+    .sidebar-brand .brand-text { font-size:22px; font-weight:700; background:linear-gradient(135deg,#a5b4fc,#c4b5fd); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .sidebar-brand .brand-sub { font-size:11px; color:#64748b; -webkit-text-fill-color:#64748b; }
+    .nav-section-label { font-size:10px; text-transform:uppercase; letter-spacing:1.5px; color:#475569; padding:14px 20px 6px; font-weight:600; }
+    .nav-btn { display:flex; align-items:center; gap:12px; padding:12px 20px; margin:2px 10px; border-radius:10px; border:none; background:transparent; color:#94a3b8; font-family:'Outfit',sans-serif; font-size:14px; font-weight:500; width:calc(100% - 20px); text-align:left; }
+    .nav-btn.active { background:linear-gradient(135deg,rgba(99,102,241,0.15),rgba(139,92,246,0.10)); color:#a5b4fc; border:1px solid rgba(99,102,241,0.25); }
+    .nav-btn .nav-icon { width:34px; height:34px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:16px; background:rgba(255,255,255,0.04); }
+    .nav-btn.active .nav-icon { background:rgba(99,102,241,0.2); }
+    @keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:0.4} }
 
-    /* ─── Ambient background blobs ─── */
-    .stApp::before {
-        content: '';
-        position: fixed;
-        top: -200px;
-        left: -200px;
-        width: 600px;
-        height: 600px;
-        background: radial-gradient(circle, rgba(99,102,241,0.12) 0%, transparent 70%);
-        pointer-events: none;
-        z-index: 0;
-    }
-    .stApp::after {
-        content: '';
-        position: fixed;
-        bottom: -250px;
-        right: -200px;
-        width: 700px;
-        height: 700px;
-        background: radial-gradient(circle, rgba(16,185,129,0.10) 0%, transparent 70%);
-        pointer-events: none;
-        z-index: 0;
-    }
+    /* Main */
+    .main .block-container { padding:32px 40px !important; max-width:1100px; margin:0 auto; position:relative; z-index:1; }
+    .page-header { margin-bottom:28px; }
+    .page-header .header-row { display:flex; align-items:flex-start; gap:18px; }
+    .page-header .header-icon-wrap { width:56px; height:56px; border-radius:16px; display:flex; align-items:center; justify-content:center; font-size:26px; flex-shrink:0; }
+    .icon-chat      { background:linear-gradient(135deg,#6366f1,#8b5cf6); box-shadow:0 6px 24px rgba(99,102,241,0.3); }
+    .icon-translate { background:linear-gradient(135deg,#0ea5e9,#6366f1); box-shadow:0 6px 24px rgba(14,165,233,0.3); }
+    .icon-image     { background:linear-gradient(135deg,#10b981,#0ea5e9); box-shadow:0 6px 24px rgba(16,185,129,0.3); }
+    .icon-bp        { background:linear-gradient(135deg,#ef4444,#f97316); box-shadow:0 6px 24px rgba(239,68,68,0.3); }
+    .page-header h1 { font-size:28px; font-weight:700; color:#f1f5f9; margin-bottom:4px; line-height:1.3; }
+    .page-header p  { font-size:14px; color:#64748b; }
 
-    /* ─── Sidebar ─── */
-    .stSidebar {
-        background: #0e1015 !important;
-        border-right: 1px solid rgba(255,255,255,0.06);
-    }
-    .stSidebar .stSidebar-content {
-        padding-top: 10px;
-    }
+    .input-card { background:#141720; border:1px solid rgba(255,255,255,0.07); border-radius:16px; padding:24px; margin-bottom:20px; }
+    .input-card:hover { border-color:rgba(99,102,241,0.25); }
 
-    /* sidebar brand */
-    .sidebar-brand {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 24px 20px 18px;
-        border-bottom: 1px solid rgba(255,255,255,0.07);
-        margin-bottom: 16px;
-    }
-    .sidebar-brand .brand-icon {
-        width: 42px;
-        height: 42px;
-        border-radius: 12px;
-        background: linear-gradient(135deg, #6366f1, #8b5cf6);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 20px;
-        box-shadow: 0 4px 20px rgba(99,102,241,0.35);
-    }
-    .sidebar-brand .brand-text {
-        font-size: 22px;
-        font-weight: 700;
-        background: linear-gradient(135deg, #a5b4fc, #c4b5fd);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-    }
-    .sidebar-brand .brand-sub {
-        font-size: 11px;
-        color: #64748b;
-        font-weight: 400;
-        -webkit-text-fill-color: #64748b;
-    }
+    .stTextarea textarea,.stTextInput input { background:#0f1117 !important; border:1px solid rgba(255,255,255,0.1) !important; border-radius:10px !important; color:#e2e8f0 !important; font-family:'Outfit',sans-serif !important; font-size:14px !important; padding:12px 16px !important; }
+    .stTextarea textarea:focus,.stTextInput input:focus { border-color:rgba(99,102,241,0.5) !important; box-shadow:0 0 0 3px rgba(99,102,241,0.15) !important; outline:none !important; }
+    .stTextarea textarea::placeholder,.stTextInput input::placeholder { color:#475569 !important; }
+    .stTextarea label,.stTextInput label { color:#94a3b8 !important; font-family:'Outfit',sans-serif !important; font-size:13px !important; font-weight:500 !important; }
 
-    /* nav buttons */
-    .nav-section-label {
-        font-size: 10px;
-        text-transform: uppercase;
-        letter-spacing: 1.5px;
-        color: #475569;
-        padding: 14px 20px 6px;
-        font-weight: 600;
-    }
-    .nav-btn {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 12px 20px;
-        margin: 2px 10px;
-        border-radius: 10px;
-        cursor: pointer;
-        transition: all 0.25s ease;
-        border: none;
-        background: transparent;
-        color: #94a3b8;
-        font-family: 'Outfit', sans-serif;
-        font-size: 14px;
-        font-weight: 500;
-        width: calc(100% - 20px);
-        text-align: left;
-    }
-    .nav-btn:hover {
-        background: rgba(255,255,255,0.05);
-        color: #e2e8f0;
-    }
-    .nav-btn.active {
-        background: linear-gradient(135deg, rgba(99,102,241,0.15), rgba(139,92,246,0.10));
-        color: #a5b4fc;
-        border: 1px solid rgba(99,102,241,0.25);
-    }
-    .nav-btn .nav-icon {
-        width: 34px;
-        height: 34px;
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 16px;
-        background: rgba(255,255,255,0.04);
-    }
-    .nav-btn.active .nav-icon {
-        background: rgba(99,102,241,0.2);
-    }
+    .main .stButton button { background:linear-gradient(135deg,#6366f1,#8b5cf6) !important; color:#fff !important; border:none !important; border-radius:10px !important; padding:12px 28px !important; font-family:'Outfit',sans-serif !important; font-size:14px !important; font-weight:600 !important; cursor:pointer; box-shadow:0 4px 16px rgba(99,102,241,0.35); letter-spacing:0.3px; transition:all 0.25s ease !important; }
+    .main .stButton button:hover { transform:translateY(-2px) !important; box-shadow:0 6px 24px rgba(99,102,241,0.45) !important; }
 
-    /* sidebar footer */
-    .sidebar-footer {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        width: 300px;
-        padding: 16px 20px;
-        border-top: 1px solid rgba(255,255,255,0.06);
-        background: #0e1015;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-    .sidebar-footer .model-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        background: rgba(16,185,129,0.12);
-        border: 1px solid rgba(16,185,129,0.25);
-        border-radius: 20px;
-        padding: 5px 12px;
-        font-size: 11px;
-        color: #34d399;
-        font-weight: 500;
-    }
-    .sidebar-footer .model-badge .dot {
-        width: 7px;
-        height: 7px;
-        border-radius: 50%;
-        background: #10b981;
-        box-shadow: 0 0 6px rgba(16,185,129,0.5);
-        animation: pulse-dot 2s infinite;
-    }
-    @keyframes pulse-dot {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.4; }
-    }
+    .stSidebar .stButton button { background:transparent !important; border:none !important; box-shadow:none !important; color:transparent !important; padding:28px 0 !important; width:100% !important; cursor:pointer; z-index:2; margin-top:0 !important; }
+    .stSidebar .stButton button:hover { background:rgba(255,255,255,0.03) !important; transform:none !important; box-shadow:none !important; }
 
-    /* ─── Main Content ─── */
-    .main .block-container {
-        padding: 32px 40px !important;
-        max-width: 900px;
-        margin: 0 auto;
-        position: relative;
-        z-index: 1;
-    }
+    .response-container { background:linear-gradient(135deg,#141720,#12151e); border:1px solid rgba(99,102,241,0.2); border-radius:16px; padding:24px; margin-top:24px; position:relative; overflow:hidden; }
+    .response-container::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg,#6366f1,#8b5cf6,#06b6d4); }
+    .response-header { display:flex; align-items:center; gap:10px; margin-bottom:16px; }
+    .response-header .resp-icon { width:32px; height:32px; border-radius:8px; background:linear-gradient(135deg,#6366f1,#8b5cf6); display:flex; align-items:center; justify-content:center; font-size:14px; }
+    .response-header .resp-label { font-size:13px; font-weight:600; color:#a5b4fc; text-transform:uppercase; letter-spacing:0.8px; }
+    .response-body { color:#cbd5e1; font-size:15px; line-height:1.75; font-family:'Outfit',sans-serif; white-space:pre-wrap; }
 
-    /* Page header */
-    .page-header {
-        margin-bottom: 32px;
-    }
-    .page-header .header-row {
-        display: flex;
-        align-items: flex-start;
-        gap: 18px;
-    }
-    .page-header .header-icon-wrap {
-        width: 56px;
-        height: 56px;
-        border-radius: 16px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 26px;
-        flex-shrink: 0;
-    }
-    .icon-chat { background: linear-gradient(135deg, #6366f1, #8b5cf6); box-shadow: 0 6px 24px rgba(99,102,241,0.3); }
-    .icon-translate { background: linear-gradient(135deg, #0ea5e9, #6366f1); box-shadow: 0 6px 24px rgba(14,165,233,0.3); }
-    .icon-image { background: linear-gradient(135deg, #10b981, #0ea5e9); box-shadow: 0 6px 24px rgba(16,185,129,0.3); }
+    .stSpinner { color:#6366f1 !important; }
+    .stAlert { border-radius:10px !important; border-left:3px solid #f59e0b !important; background:rgba(245,158,11,0.08) !important; color:#fcd34d !important; }
+    .stFileUploader { border:2px dashed rgba(99,102,241,0.25) !important; border-radius:14px !important; background:#0f1117 !important; padding:20px !important; }
+    .stFileUploader label { color:#94a3b8 !important; font-family:'Outfit',sans-serif !important; }
+    .stImage img { border-radius:12px; border:1px solid rgba(255,255,255,0.08); }
+    .reportview-container .footer,footer { display:none !important; }
+    #MainMenu { visibility:hidden; }
+    ::-webkit-scrollbar { width:6px; }
+    ::-webkit-scrollbar-track { background:#0a0c0f; }
+    ::-webkit-scrollbar-thumb { background:#2d3148; border-radius:3px; }
 
-    .page-header h1 {
-        font-size: 28px;
-        font-weight: 700;
-        color: #f1f5f9;
-        margin-bottom: 4px;
-        line-height: 1.3;
-    }
-    .page-header p {
-        font-size: 14px;
-        color: #64748b;
-        font-weight: 400;
-    }
+    .stats-row { display:flex; gap:12px; margin-bottom:28px; }
+    .stat-card { flex:1; background:#141720; border:1px solid rgba(255,255,255,0.06); border-radius:12px; padding:16px 18px; }
+    .stat-card .stat-value { font-size:22px; font-weight:700; color:#a5b4fc; }
+    .stat-card .stat-label { font-size:11px; color:#64748b; margin-top:2px; text-transform:uppercase; letter-spacing:0.6px; }
 
-    /* ─── Input Cards ─── */
-    .input-card {
-        background: #141720;
-        border: 1px solid rgba(255,255,255,0.07);
-        border-radius: 16px;
-        padding: 24px;
-        margin-bottom: 20px;
-        transition: border-color 0.3s;
-    }
-    .input-card:hover {
-        border-color: rgba(99,102,241,0.25);
-    }
-    .input-card .card-label {
-        font-size: 12px;
-        font-weight: 600;
-        color: #64748b;
-        text-transform: uppercase;
-        letter-spacing: 0.8px;
-        margin-bottom: 10px;
-    }
+    /* BP Form */
+    .bp-layout { display:flex; gap:24px; align-items:flex-start; }
+    .bp-form-panel { flex:1; background:#141720; border:1px solid rgba(255,255,255,0.07); border-radius:18px; padding:28px 26px; }
+    .bp-field-row { display:flex; gap:16px; margin-bottom:14px; }
+    .bp-field-col { flex:1; min-width:0; }
+    .bp-field-label { display:flex; align-items:center; gap:6px; font-size:11.5px; font-weight:600; color:#64748b; margin-bottom:6px; }
+    .bp-sidebar { width:230px; flex-shrink:0; display:flex; flex-direction:column; gap:18px; }
+    .bp-feature-item { display:flex; align-items:flex-start; gap:8px; margin-bottom:8px; }
+    .bp-feature-dot { color:#6366f1; font-size:18px; line-height:1; margin-top:1px; }
+    .bp-feature-text { font-size:12.5px; color:#94a3b8; font-weight:500; line-height:1.4; }
+    .bp-guidelines-card { background:#141720; border:1px solid rgba(255,255,255,0.07); border-radius:14px; padding:18px; }
+    .bp-guidelines-header { display:flex; align-items:center; gap:8px; margin-bottom:14px; padding-bottom:12px; border-bottom:1px solid rgba(255,255,255,0.07); }
+    .bp-guidelines-header .gh-title { font-size:13px; font-weight:700; color:#e2e8f0; }
+    .bp-guideline-row { display:flex; justify-content:space-between; align-items:center; padding:5px 0; }
+    .bp-guideline-stage { font-size:12px; font-weight:600; }
+    .bp-guideline-values { font-size:11.5px; color:#64748b; font-family:'JetBrains Mono',monospace; }
+    .bp-field-col .stSelectbox label { display:none !important; }
+    .bp-field-col .stSelectbox select { background:#0f1117 !important; color:#cbd5e1 !important; border:1.5px solid rgba(255,255,255,0.1) !important; border-radius:9px !important; font-family:'Outfit',sans-serif !important; font-size:13px !important; padding:8px 10px !important; }
+    .bp-field-col .stSelectbox select:focus { border-color:rgba(99,102,241,0.5) !important; box-shadow:0 0 0 3px rgba(99,102,241,0.15) !important; }
 
-    /* ─── Streamlit Overrides ─── */
-    .stTextarea textarea,
-    .stTextInput input {
-        background: #0f1117 !important;
-        border: 1px solid rgba(255,255,255,0.1) !important;
-        border-radius: 10px !important;
-        color: #e2e8f0 !important;
-        font-family: 'Outfit', sans-serif !important;
-        font-size: 14px !important;
-        padding: 12px 16px !important;
-        transition: border-color 0.25s, box-shadow 0.25s;
-    }
-    .stTextarea textarea:focus,
-    .stTextInput input:focus {
-        border-color: rgba(99,102,241,0.5) !important;
-        box-shadow: 0 0 0 3px rgba(99,102,241,0.15) !important;
-        outline: none !important;
-    }
-    .stTextarea textarea::placeholder,
-    .stTextInput input::placeholder {
-        color: #475569 !important;
-    }
-
-    /* labels */
-    .stTextarea label,
-    .stTextInput label {
-        color: #94a3b8 !important;
-        font-family: 'Outfit', sans-serif !important;
-        font-size: 13px !important;
-        font-weight: 500 !important;
-        margin-bottom: 6px !important;
-    }
-
-    /* ─── Buttons ─── */
-    .stButton button {
-        background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
-        color: #fff !important;
-        border: none !important;
-        border-radius: 10px !important;
-        padding: 12px 28px !important;
-        font-family: 'Outfit', sans-serif !important;
-        font-size: 14px !important;
-        font-weight: 600 !important;
-        cursor: pointer;
-        transition: all 0.25s ease !important;
-        box-shadow: 0 4px 16px rgba(99,102,241,0.35);
-        letter-spacing: 0.3px;
-    }
-    .stButton button:hover {
-        transform: translateY(-2px) !important;
-        box-shadow: 0 6px 24px rgba(99,102,241,0.45) !important;
-    }
-    .stButton button:active {
-        transform: translateY(0px) !important;
-    }
-
-    /* ─── Response Box ─── */
-    .response-container {
-        background: linear-gradient(135deg, #141720, #12151e);
-        border: 1px solid rgba(99,102,241,0.2);
-        border-radius: 16px;
-        padding: 24px;
-        margin-top: 24px;
-        position: relative;
-        overflow: hidden;
-    }
-    .response-container::before {
-        content: '';
-        position: absolute;
-        top: 0; left: 0; right: 0;
-        height: 2px;
-        background: linear-gradient(90deg, #6366f1, #8b5cf6, #06b6d4);
-    }
-    .response-header {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        margin-bottom: 16px;
-    }
-    .response-header .resp-icon {
-        width: 32px;
-        height: 32px;
-        border-radius: 8px;
-        background: linear-gradient(135deg, #6366f1, #8b5cf6);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 14px;
-    }
-    .response-header .resp-label {
-        font-size: 13px;
-        font-weight: 600;
-        color: #a5b4fc;
-        text-transform: uppercase;
-        letter-spacing: 0.8px;
-    }
-    .response-body {
-        color: #cbd5e1;
-        font-size: 15px;
-        line-height: 1.75;
-        font-family: 'Outfit', sans-serif;
-        white-space: pre-wrap;
-    }
-
-    /* ─── Spinner override ─── */
-    .stSpinner {
-        color: #6366f1 !important;
-    }
-
-    /* ─── Warning ─── */
-    .stAlert {
-        border-radius: 10px !important;
-        border-left: 3px solid #f59e0b !important;
-        background: rgba(245,158,11,0.08) !important;
-        color: #fcd34d !important;
-    }
-
-    /* ─── Image Upload ─── */
-    .stFileUploader {
-        border: 2px dashed rgba(99,102,241,0.25) !important;
-        border-radius: 14px !important;
-        background: #0f1117 !important;
-        padding: 20px !important;
-        transition: border-color 0.3s;
-    }
-    .stFileUploader:hover {
-        border-color: rgba(99,102,241,0.5) !important;
-    }
-    .stFileUploader label {
-        color: #94a3b8 !important;
-        font-family: 'Outfit', sans-serif !important;
-    }
-    .stFileUploader .uploadedFileName {
-        color: #a5b4fc !important;
-    }
-
-    /* ─── Displayed image ─── */
-    .stImage img {
-        border-radius: 12px;
-        border: 1px solid rgba(255,255,255,0.08);
-    }
-
-    /* ─── Selectbox ─── */
-    .stSelectbox select {
-        background: #0f1117 !important;
-        color: #e2e8f0 !important;
-        border: 1px solid rgba(255,255,255,0.1) !important;
-        border-radius: 10px !important;
-        font-family: 'Outfit', sans-serif !important;
-    }
-
-    /* ─── Sidebar nav overlay buttons (transparent, clickable layer) ─── */
-    .stSidebar .stButton button {
-        background: transparent !important;
-        border: none !important;
-        box-shadow: none !important;
-        color: transparent !important;
-        padding: 28px 0 !important;
-        width: 100% !important;
-        cursor: pointer;
-        position: relative;
-        z-index: 2;
-        margin-top: 0 !important;
-    }
-    .stSidebar .stButton button:hover {
-        background: rgba(255,255,255,0.03) !important;
-        transform: none !important;
-        box-shadow: none !important;
-    }
-
-    /* hide default streamlit footer */
-    .reportview-container .footer,
-    footer { display: none !important; }
-
-    /* hide hamburger menu */
-    #MainMenu { visibility: hidden; }
-
-    /* scrollbar */
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: #0a0c0f; }
-    ::-webkit-scrollbar-thumb { background: #2d3148; border-radius: 3px; }
-    ::-webkit-scrollbar-thumb:hover { background: #3d4168; }
-
-    /* ─── Stats row ─── */
-    .stats-row {
-        display: flex;
-        gap: 12px;
-        margin-bottom: 28px;
-    }
-    .stat-card {
-        flex: 1;
-        background: #141720;
-        border: 1px solid rgba(255,255,255,0.06);
-        border-radius: 12px;
-        padding: 16px 18px;
-    }
-    .stat-card .stat-value {
-        font-size: 22px;
-        font-weight: 700;
-        color: #a5b4fc;
-    }
-    .stat-card .stat-label {
-        font-size: 11px;
-        color: #64748b;
-        margin-top: 2px;
-        text-transform: uppercase;
-        letter-spacing: 0.6px;
-    }
+    /* BP Result */
+    .bp-result-card { background:#141720; border:1px solid rgba(255,255,255,0.07); border-radius:16px; padding:36px 28px; text-align:center; }
+    .bp-result-check { width:56px; height:56px; border-radius:50%; background:linear-gradient(135deg,#4338ca,#6366f1); display:flex; align-items:center; justify-content:center; font-size:26px; color:#fff; margin:0 auto 14px; box-shadow:0 4px 18px rgba(99,102,241,0.35); }
+    .bp-result-title { font-size:20px; font-weight:700; color:#f1f5f9; margin-bottom:18px; }
+    .bp-risk-badge { display:inline-block; border-radius:12px; padding:14px 40px; margin-bottom:16px; }
+    .bp-risk-label { font-size:10px; text-transform:uppercase; letter-spacing:1.2px; font-weight:600; display:block; margin-bottom:4px; }
+    .bp-risk-value { font-size:24px; font-weight:700; display:block; }
+    .bp-result-advice { font-size:13.5px; color:#94a3b8; max-width:460px; margin:0 auto 24px; line-height:1.6; }
+    .bp-summary-row { display:flex; justify-content:space-between; padding:7px 14px; background:rgba(255,255,255,0.03); border-radius:7px; font-size:12.5px; margin-bottom:5px; }
+    .bp-summary-label { color:#64748b; font-weight:500; }
+    .bp-summary-value { color:#e2e8f0; font-weight:600; }
 </style>
 """, unsafe_allow_html=True)
 
 
-# ─── Sidebar ─────────────────────────────────────────────
-sidebar_html = """
+# ─── Sidebar ──────────────────────────────────────────────
+st.sidebar.markdown("""
 <div class="sidebar-brand">
-    <div class="brand-icon">🧠</div>
+    <div class="brand-icon">&#x1F9E0;</div>
     <div>
         <div class="brand-text">NovaMind</div>
         <div class="brand-sub">AI Assistant</div>
     </div>
 </div>
 <div class="nav-section-label">Features</div>
-"""
-st.sidebar.markdown(sidebar_html, unsafe_allow_html=True)
+""", unsafe_allow_html=True)
 
-pages = {
-    "Chatbot": ("💬", "Chat with AI"),
-    "Language Translation": ("🌍", "Translate text"),
-    "Image Analysis": ("🖼️", "Analyze images"),
-}
+PAGES = [
+    ("Chatbot",              "&#x1F4AC;", "Chat with AI"),
+    ("Language Translation", "&#x1F30D;", "Translate text"),
+    ("Image Analysis",       "&#x1F5BC;", "Analyze images"),
+    ("BP Risk Assessment",   "&#x2764;",  "Heart health check"),
+]
 
 if "current_page" not in st.session_state:
     st.session_state["current_page"] = "Chatbot"
 
-for page_name, (icon, desc) in pages.items():
-    is_active = st.session_state["current_page"] == page_name
-    active_class = "active" if is_active else ""
-    # Inject a styled HTML card, then a matching Streamlit button right below it
+for page_name, icon_entity, desc in PAGES:
+    is_active   = st.session_state["current_page"] == page_name
+    active_cls  = "active" if is_active else ""
+    text_color  = "#a5b4fc" if is_active else "#cbd5e1"
+
     st.sidebar.markdown(f"""
-    <div class="nav-btn {active_class}" style="pointer-events:none; margin-bottom:-38px;">
-        <div class="nav-icon">{icon}</div>
+    <div class="nav-btn {active_cls}" style="pointer-events:none; margin-bottom:-38px;">
+        <div class="nav-icon">{icon_entity}</div>
         <div>
-            <div style="font-size:14px; font-weight:600; color:{'#a5b4fc' if is_active else '#cbd5e1'};">{page_name}</div>
-            <div style="font-size:11px; color:#64748b;">{desc}</div>
+            <div style="font-size:14px;font-weight:600;color:{text_color};">{page_name}</div>
+            <div style="font-size:11px;color:#64748b;">{desc}</div>
         </div>
     </div>
     """, unsafe_allow_html=True)
-    # Transparent overlay button that sits on top and captures the click
-    if st.sidebar.button(
-        f"{icon}  {page_name}",
-        key=f"nav_{page_name}",
-        use_container_width=True,
-    ):
+
+    if st.sidebar.button(page_name, key=f"nav_{page_name}", use_container_width=True):
         st.session_state["current_page"] = page_name
         st.rerun()
 
 page = st.session_state["current_page"]
 
-st.sidebar.markdown("""<div style="height:40px;"></div>""", unsafe_allow_html=True)
+st.sidebar.markdown('<div style="height:40px;"></div>', unsafe_allow_html=True)
 st.sidebar.markdown("""
-<div class="model-badge" style="margin:0 20px; display:inline-flex; align-items:center; gap:6px; background:rgba(16,185,129,0.12); border:1px solid rgba(16,185,129,0.25); border-radius:20px; padding:6px 14px; font-size:11px; color:#34d399; font-weight:500;">
-    <div class="dot" style="width:7px;height:7px;border-radius:50%;background:#10b981;box-shadow:0 0 6px rgba(16,185,129,0.5);animation:pulse-dot 2s infinite;"></div>
-    LLaMA 3.3 70B — Online
+<div style="margin:0 20px;display:inline-flex;align-items:center;gap:6px;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.25);border-radius:20px;padding:6px 14px;font-size:11px;color:#34d399;font-weight:500;">
+    <div style="width:7px;height:7px;border-radius:50%;background:#10b981;box-shadow:0 0 6px rgba(16,185,129,0.5);animation:pulse-dot 2s infinite;"></div>
+    LLaMA 3.3 70B &#8212; Online
 </div>
 """, unsafe_allow_html=True)
 
 
-# ─── Groq Chat Function ──────────────────────────────────
+# ─── Groq ─────────────────────────────────────────────────
 def groq_chat(prompt):
     response = client.chat.completions.create(
         model="llama-3.3-70b-versatile",
@@ -532,13 +183,11 @@ def groq_chat(prompt):
     )
     return response.choices[0].message.content
 
-
-def render_response(title_icon, title, body):
-    """Render a styled response box"""
+def render_response(icon, title, body):
     st.markdown(f"""
     <div class="response-container">
         <div class="response-header">
-            <div class="resp-icon">{title_icon}</div>
+            <div class="resp-icon">{icon}</div>
             <div class="resp-label">{title}</div>
         </div>
         <div class="response-body">{body}</div>
@@ -546,18 +195,13 @@ def render_response(title_icon, title, body):
     """, unsafe_allow_html=True)
 
 
-# ─── Pages ───────────────────────────────────────────────
+# ═══════════════ CHATBOT ══════════════════════════════════
 if page == "Chatbot":
     st.markdown("""
-    <div class="page-header">
-        <div class="header-row">
-            <div class="header-icon-wrap icon-chat">💬</div>
-            <div>
-                <h1>AI Chatbot</h1>
-                <p>Ask anything — get intelligent, detailed answers instantly.</p>
-            </div>
-        </div>
-    </div>
+    <div class="page-header"><div class="header-row">
+        <div class="header-icon-wrap icon-chat">&#x1F4AC;</div>
+        <div><h1>AI Chatbot</h1><p>Ask anything &#8212; get intelligent, detailed answers instantly.</p></div>
+    </div></div>
     <div class="stats-row">
         <div class="stat-card"><div class="stat-value">70B</div><div class="stat-label">Model Params</div></div>
         <div class="stat-card"><div class="stat-value">1024</div><div class="stat-label">Max Tokens</div></div>
@@ -566,29 +210,25 @@ if page == "Chatbot":
     """, unsafe_allow_html=True)
 
     st.markdown('<div class="input-card">', unsafe_allow_html=True)
-    user_input = st.text_area("Your message", placeholder="Ask me anything...", height=140, label_visibility="visible")
+    user_input = st.text_area("Your message", placeholder="Ask me anything...", height=140)
     st.markdown('</div>', unsafe_allow_html=True)
 
-    if st.button("✨ Generate Response", use_container_width=False):
+    if st.button("Generate Response"):
         if user_input.strip():
             with st.spinner("Thinking..."):
                 answer = groq_chat(user_input)
-            render_response("🤖", "AI Response", answer)
+            render_response("&#x1F916;", "AI Response", answer)
         else:
             st.warning("Please enter a message first.")
 
-# ─────────────────────────────────────────────────────────
+
+# ═══════════════ TRANSLATION ══════════════════════════════
 elif page == "Language Translation":
     st.markdown("""
-    <div class="page-header">
-        <div class="header-row">
-            <div class="header-icon-wrap icon-translate">🌍</div>
-            <div>
-                <h1>Language Translation</h1>
-                <p>Translate text into any language with high accuracy.</p>
-            </div>
-        </div>
-    </div>
+    <div class="page-header"><div class="header-row">
+        <div class="header-icon-wrap icon-translate">&#x1F30D;</div>
+        <div><h1>Language Translation</h1><p>Translate text into any language with high accuracy.</p></div>
+    </div></div>
     <div class="stats-row">
         <div class="stat-card"><div class="stat-value">100+</div><div class="stat-label">Languages</div></div>
         <div class="stat-card"><div class="stat-value">AI</div><div class="stat-label">Powered</div></div>
@@ -604,27 +244,23 @@ elif page == "Language Translation":
     target_language = st.text_input("Target Language", placeholder="e.g. French, Hindi, German, Spanish...")
     st.markdown('</div>', unsafe_allow_html=True)
 
-    if st.button("🌐 Translate", use_container_width=False):
+    if st.button("Translate"):
         if text and target_language:
             prompt = f"Translate the following text into {target_language}. Only output the translated text, nothing else:\n\n{text}"
             with st.spinner("Translating..."):
                 translated = groq_chat(prompt)
-            render_response("🌐", "Translated Text", translated)
+            render_response("&#x1F310;", "Translated Text", translated)
         else:
             st.warning("Please enter both text and a target language.")
 
-# ─────────────────────────────────────────────────────────
+
+# ═══════════════ IMAGE ANALYSIS ═══════════════════════════
 elif page == "Image Analysis":
     st.markdown("""
-    <div class="page-header">
-        <div class="header-row">
-            <div class="header-icon-wrap icon-image">🖼️</div>
-            <div>
-                <h1>Image Analysis</h1>
-                <p>Upload an image and extract detailed insights using AI.</p>
-            </div>
-        </div>
-    </div>
+    <div class="page-header"><div class="header-row">
+        <div class="header-icon-wrap icon-image">&#x1F5BC;</div>
+        <div><h1>Image Analysis</h1><p>Upload an image and extract detailed insights using AI.</p></div>
+    </div></div>
     <div class="stats-row">
         <div class="stat-card"><div class="stat-value">JPG</div><div class="stat-label">Supported</div></div>
         <div class="stat-card"><div class="stat-value">PNG</div><div class="stat-label">Supported</div></div>
@@ -632,36 +268,175 @@ elif page == "Image Analysis":
     </div>
     """, unsafe_allow_html=True)
 
-    uploaded_image = st.file_uploader("Upload an image", type=["jpg", "png", "jpeg"], label_visibility="visible")
+    uploaded_image = st.file_uploader("Upload an image", type=["jpg", "png", "jpeg"])
 
     if uploaded_image:
         col1, col2 = st.columns([1, 1], gap="large")
-
         with col1:
             image = Image.open(uploaded_image)
             st.image(image, caption="Uploaded Image", use_container_width=True)
-
         with col2:
-            st.markdown('<div class="input-card" style="height:100%; min-height:200px;">', unsafe_allow_html=True)
-            image_prompt = st.text_area(
-                "What do you want to know?",
-                value="Describe this image in detail.",
-                height=100
-            )
+            st.markdown('<div class="input-card">', unsafe_allow_html=True)
+            image_prompt = st.text_area("What do you want to know?", value="Describe this image in detail.", height=100)
             st.markdown('</div>', unsafe_allow_html=True)
-
-            if st.button("🔍 Analyze Image", use_container_width=True):
-                prompt = f"""The user uploaded an image.
-Task: {image_prompt}
-Provide a detailed and professional response."""
+            if st.button("Analyze Image", use_container_width=True):
+                prompt = f"The user uploaded an image.\nTask: {image_prompt}\nProvide a detailed and professional response."
                 with st.spinner("Analyzing image..."):
                     result = groq_chat(prompt)
-                render_response("🔍", "Analysis Result", result)
+                render_response("&#x1F50D;", "Analysis Result", result)
     else:
         st.markdown("""
-        <div style="border:2px dashed rgba(99,102,241,0.2); border-radius:16px; padding:60px 30px; text-align:center; background:#0f1117;">
-            <div style="font-size:48px; margin-bottom:12px;">🖼️</div>
-            <div style="color:#64748b; font-size:15px;">Drop your image here or use the uploader above</div>
-            <div style="color:#475569; font-size:12px; margin-top:6px;">Supports JPG, PNG, JPEG</div>
+        <div style="border:2px dashed rgba(99,102,241,0.2);border-radius:16px;padding:60px 30px;text-align:center;background:#0f1117;">
+            <div style="font-size:48px;margin-bottom:12px;">&#x1F5BC;</div>
+            <div style="color:#64748b;font-size:15px;">Drop your image here or use the uploader above</div>
+            <div style="color:#475569;font-size:12px;margin-top:6px;">Supports JPG, PNG, JPEG</div>
         </div>
         """, unsafe_allow_html=True)
+
+
+# ═══════════════ BP RISK ASSESSMENT ═══════════════════════
+elif page == "BP Risk Assessment":
+
+    BP_FIELDS = [
+        ("gender",         "Gender",                         "&#x26A7;",  ["Male","Female","Other","Prefer not to say"]),
+        ("age_group",      "Age Group",                      "&#x1F4C5;", ["18-25","26-35","36-45","46-55","56-65","65+"]),
+        ("family_hist",    "Family History of Hypertension", "&#x1F46A;", ["Yes","No","Unknown"]),
+        ("medical_care",   "Currently Under Medical Care",   "&#x1F3E5;", ["Yes","No"]),
+        ("bp_medication",  "Currently Taking BP Medication", "&#x1F48A;", ["Yes","No"]),
+        ("symptom_sev",    "Symptom Severity",               "&#x1F4CA;", ["None","Mild","Moderate","Severe","Critical"]),
+        ("shortness",      "Shortness of Breath",            "&#x1FAE1;", ["Never","Occasionally","Frequently","Always"]),
+        ("vision",         "Vision Changes",                 "&#x1F441;", ["None","Mild blur","Significant blur","Sudden loss"]),
+        ("nosebleeds",     "Frequent Nosebleeds",            "&#x1FA78;", ["Never","Rarely","Sometimes","Often"]),
+        ("time_diag",      "Time Since Diagnosis",           "&#x23F1;",  ["< 1 year","1-3 years","3-5 years","5-10 years","10+ years","Not diagnosed"]),
+        ("systolic",       "Systolic Pressure",              "&#x1F4C8;", ["< 120 mmHg","120-129 mmHg","130-139 mmHg","140-159 mmHg","160-179 mmHg",">=180 mmHg"]),
+        ("diastolic",      "Diastolic Pressure",             "&#x1F4C9;", ["< 80 mmHg","80-89 mmHg","90-99 mmHg","100-109 mmHg",">=110 mmHg"]),
+        ("diet",           "Heart-Healthy Diet",             "&#x1F957;", ["Yes, consistently","Sometimes","Rarely","No"]),
+    ]
+
+    GUIDELINES = [
+        ("Normal",   "< 120/< 80",   "#22c55e"),
+        ("Elevated", "120-129/< 80", "#eab308"),
+        ("Stage 1",  "130-139/80-89","#f97316"),
+        ("Stage 2",  ">=140/>=90",   "#ef4444"),
+        ("Crisis",   ">180/>120",    "#dc2626"),
+    ]
+
+    FEATURES = [
+        "Evidence-based risk assessment",
+        "Clinical guideline compliance",
+        "Personalized recommendations",
+        "Professional medical support",
+    ]
+
+    # ── Header ──
+    st.markdown("""
+    <div class="page-header"><div class="header-row">
+        <div class="header-icon-wrap icon-bp">&#x2764;</div>
+        <div><h1>BP Risk Assessment</h1><p>Fill in patient data to generate a blood pressure risk report.</p></div>
+    </div></div>
+    """, unsafe_allow_html=True)
+
+    show_result = st.session_state.get("bp_show_result", False)
+
+    # ═══ FORM VIEW ═══
+    if not show_result:
+        st.markdown('<div class="bp-layout">', unsafe_allow_html=True)
+        st.markdown('<div class="bp-form-panel">', unsafe_allow_html=True)
+
+        for i in range(0, len(BP_FIELDS), 2):
+            pair = BP_FIELDS[i:i+2]
+            st.markdown('<div class="bp-field-row">', unsafe_allow_html=True)
+            cols = st.columns(len(pair))
+            for j, (key, label, icon_ent, options) in enumerate(pair):
+                with cols[j]:
+                    st.markdown(f'<div class="bp-field-col">', unsafe_allow_html=True)
+                    st.markdown(f'<div class="bp-field-label">{icon_ent} {label}</div>', unsafe_allow_html=True)
+                    st.selectbox(label, ["Select..."] + options, key=f"bp_{key}", label_visibility="hidden")
+                    st.markdown('</div>', unsafe_allow_html=True)
+            st.markdown('</div>', unsafe_allow_html=True)
+
+        # Submit
+        clicked = st.button("GENERATE RISK ASSESSMENT", key="bp_submit", use_container_width=True)
+        st.markdown('</div>', unsafe_allow_html=True)   # close form-panel
+
+        # ── Sidebar: features + guidelines ──
+        features_html = "".join(
+            f'<div class="bp-feature-item"><span class="bp-feature-dot">&#x2022;</span><span class="bp-feature-text">{f}</span></div>'
+            for f in FEATURES
+        )
+        guidelines_html = "".join(
+            f'<div class="bp-guideline-row"><span class="bp-guideline-stage" style="color:{c};">{s}:</span><span class="bp-guideline-values">{v}</span></div>'
+            for s, v, c in GUIDELINES
+        )
+        st.markdown(f"""
+        <div class="bp-sidebar">
+            {features_html}
+            <div class="bp-guidelines-card">
+                <div class="bp-guidelines-header">
+                    <span>&#x1F499;</span>
+                    <span class="gh-title">Blood Pressure Guidelines</span>
+                </div>
+                {guidelines_html}
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        st.markdown('</div>', unsafe_allow_html=True)   # close bp-layout
+
+        # ── Handle submit ──
+        if clicked:
+            collected = {}
+            for key, label, _, _ in BP_FIELDS:
+                val = st.session_state.get(f"bp_{key}", "Select...")
+                if val != "Select...":
+                    collected[label] = val
+            st.session_state["bp_collected"]   = collected
+            st.session_state["bp_show_result"] = True
+            st.rerun()
+
+    # ═══ RESULT VIEW ═══
+    else:
+        collected   = st.session_state.get("bp_collected", {})
+        systolic_v  = collected.get("Systolic Pressure", "")
+
+        risk, color, bg, advice = (
+            "Normal", "#22c55e", "rgba(34,197,94,0.1)",
+            "Your blood pressure appears normal. Keep up a healthy lifestyle."
+        )
+        if ">=180" in systolic_v or "180" in systolic_v:
+            risk, color, bg = "Crisis",  "#dc2626", "rgba(220,38,38,0.12)"
+            advice = "Hypertensive crisis detected. Seek emergency medical attention immediately."
+        elif "160" in systolic_v or "140" in systolic_v:
+            risk, color, bg = "Stage 2", "#ef4444", "rgba(239,68,68,0.12)"
+            advice = "Stage 2 hypertension. Prompt medical evaluation and medication adjustment required."
+        elif "130" in systolic_v:
+            risk, color, bg = "Stage 1", "#f97316", "rgba(249,115,22,0.12)"
+            advice = "Stage 1 hypertension. Consult your doctor about lifestyle changes and medication."
+        elif "120" in systolic_v:
+            risk, color, bg = "Elevated","#eab308", "rgba(234,179,8,0.12)"
+            advice = "BP is elevated. Reduce sodium, exercise regularly, and manage stress."
+
+        summary_html = "".join(
+            f'<div class="bp-summary-row"><span class="bp-summary-label">{lbl}</span><span class="bp-summary-value">{val}</span></div>'
+            for lbl, val in collected.items()
+        )
+
+        st.markdown(f"""
+        <div class="bp-result-card">
+            <div class="bp-result-check">&#x2713;</div>
+            <div class="bp-result-title">Risk Assessment Complete</div>
+            <div class="bp-risk-badge" style="background:{bg};border:1px solid {color}33;">
+                <span class="bp-risk-label" style="color:{color};">Risk Level</span>
+                <span class="bp-risk-value" style="color:{color};">{risk}</span>
+            </div>
+            <p class="bp-result-advice">{advice}</p>
+            <div style="max-width:460px;margin:0 auto 24px;">{summary_html}</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        if st.button("Start New Assessment", key="bp_reset"):
+            st.session_state["bp_show_result"] = False
+            st.session_state["bp_collected"]   = {}
+            for key, _, _, _ in BP_FIELDS:
+                st.session_state.pop(f"bp_{key}", None)
+            st.rerun()
