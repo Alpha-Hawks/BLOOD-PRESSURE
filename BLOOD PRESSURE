@@ -10,39 +10,519 @@ GROQ_API_KEY = os.getenv("gsk_uXRyEc8PYKz5k5vs9sdxWGdyb3FY68b0JQoI8Ag1rqX1vdcI3S
 client = Groq(api_key=GROQ_API_KEY)
 
 st.set_page_config(
-    page_title="AI Multi-Tool Assistant",
+    page_title="NovaMind AI",
     page_icon="🤖",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 
 st.markdown("""
 <style>
-.main-title {
-    font-size: 40px;
-    font-weight: 700;
-}
-.subtitle {
-    color: gray;
-    font-size: 18px;
-}
-.card {
-    padding: 20px;
-    border-radius: 12px;
-    background-color: #f7f9fc;
-    box-shadow: 0px 0px 10px rgba(0,0,0,0.05);
-}
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    /* ─── Full Dark Theme ─── */
+    .stApp {
+        background: #0a0c0f;
+        color: #e2e8f0;
+        font-family: 'Outfit', sans-serif;
+        min-height: 100vh;
+    }
+
+    /* ─── Ambient background blobs ─── */
+    .stApp::before {
+        content: '';
+        position: fixed;
+        top: -200px;
+        left: -200px;
+        width: 600px;
+        height: 600px;
+        background: radial-gradient(circle, rgba(99,102,241,0.12) 0%, transparent 70%);
+        pointer-events: none;
+        z-index: 0;
+    }
+    .stApp::after {
+        content: '';
+        position: fixed;
+        bottom: -250px;
+        right: -200px;
+        width: 700px;
+        height: 700px;
+        background: radial-gradient(circle, rgba(16,185,129,0.10) 0%, transparent 70%);
+        pointer-events: none;
+        z-index: 0;
+    }
+
+    /* ─── Sidebar ─── */
+    .stSidebar {
+        background: #0e1015 !important;
+        border-right: 1px solid rgba(255,255,255,0.06);
+    }
+    .stSidebar .stSidebar-content {
+        padding-top: 10px;
+    }
+
+    /* sidebar brand */
+    .sidebar-brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 24px 20px 18px;
+        border-bottom: 1px solid rgba(255,255,255,0.07);
+        margin-bottom: 16px;
+    }
+    .sidebar-brand .brand-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        box-shadow: 0 4px 20px rgba(99,102,241,0.35);
+    }
+    .sidebar-brand .brand-text {
+        font-size: 22px;
+        font-weight: 700;
+        background: linear-gradient(135deg, #a5b4fc, #c4b5fd);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    .sidebar-brand .brand-sub {
+        font-size: 11px;
+        color: #64748b;
+        font-weight: 400;
+        -webkit-text-fill-color: #64748b;
+    }
+
+    /* nav buttons */
+    .nav-section-label {
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        color: #475569;
+        padding: 14px 20px 6px;
+        font-weight: 600;
+    }
+    .nav-btn {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 20px;
+        margin: 2px 10px;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.25s ease;
+        border: none;
+        background: transparent;
+        color: #94a3b8;
+        font-family: 'Outfit', sans-serif;
+        font-size: 14px;
+        font-weight: 500;
+        width: calc(100% - 20px);
+        text-align: left;
+    }
+    .nav-btn:hover {
+        background: rgba(255,255,255,0.05);
+        color: #e2e8f0;
+    }
+    .nav-btn.active {
+        background: linear-gradient(135deg, rgba(99,102,241,0.15), rgba(139,92,246,0.10));
+        color: #a5b4fc;
+        border: 1px solid rgba(99,102,241,0.25);
+    }
+    .nav-btn .nav-icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        background: rgba(255,255,255,0.04);
+    }
+    .nav-btn.active .nav-icon {
+        background: rgba(99,102,241,0.2);
+    }
+
+    /* sidebar footer */
+    .sidebar-footer {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 300px;
+        padding: 16px 20px;
+        border-top: 1px solid rgba(255,255,255,0.06);
+        background: #0e1015;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .sidebar-footer .model-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(16,185,129,0.12);
+        border: 1px solid rgba(16,185,129,0.25);
+        border-radius: 20px;
+        padding: 5px 12px;
+        font-size: 11px;
+        color: #34d399;
+        font-weight: 500;
+    }
+    .sidebar-footer .model-badge .dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #10b981;
+        box-shadow: 0 0 6px rgba(16,185,129,0.5);
+        animation: pulse-dot 2s infinite;
+    }
+    @keyframes pulse-dot {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.4; }
+    }
+
+    /* ─── Main Content ─── */
+    .main .block-container {
+        padding: 32px 40px !important;
+        max-width: 900px;
+        margin: 0 auto;
+        position: relative;
+        z-index: 1;
+    }
+
+    /* Page header */
+    .page-header {
+        margin-bottom: 32px;
+    }
+    .page-header .header-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 18px;
+    }
+    .page-header .header-icon-wrap {
+        width: 56px;
+        height: 56px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 26px;
+        flex-shrink: 0;
+    }
+    .icon-chat { background: linear-gradient(135deg, #6366f1, #8b5cf6); box-shadow: 0 6px 24px rgba(99,102,241,0.3); }
+    .icon-translate { background: linear-gradient(135deg, #0ea5e9, #6366f1); box-shadow: 0 6px 24px rgba(14,165,233,0.3); }
+    .icon-image { background: linear-gradient(135deg, #10b981, #0ea5e9); box-shadow: 0 6px 24px rgba(16,185,129,0.3); }
+
+    .page-header h1 {
+        font-size: 28px;
+        font-weight: 700;
+        color: #f1f5f9;
+        margin-bottom: 4px;
+        line-height: 1.3;
+    }
+    .page-header p {
+        font-size: 14px;
+        color: #64748b;
+        font-weight: 400;
+    }
+
+    /* ─── Input Cards ─── */
+    .input-card {
+        background: #141720;
+        border: 1px solid rgba(255,255,255,0.07);
+        border-radius: 16px;
+        padding: 24px;
+        margin-bottom: 20px;
+        transition: border-color 0.3s;
+    }
+    .input-card:hover {
+        border-color: rgba(99,102,241,0.25);
+    }
+    .input-card .card-label {
+        font-size: 12px;
+        font-weight: 600;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        margin-bottom: 10px;
+    }
+
+    /* ─── Streamlit Overrides ─── */
+    .stTextarea textarea,
+    .stTextInput input {
+        background: #0f1117 !important;
+        border: 1px solid rgba(255,255,255,0.1) !important;
+        border-radius: 10px !important;
+        color: #e2e8f0 !important;
+        font-family: 'Outfit', sans-serif !important;
+        font-size: 14px !important;
+        padding: 12px 16px !important;
+        transition: border-color 0.25s, box-shadow 0.25s;
+    }
+    .stTextarea textarea:focus,
+    .stTextInput input:focus {
+        border-color: rgba(99,102,241,0.5) !important;
+        box-shadow: 0 0 0 3px rgba(99,102,241,0.15) !important;
+        outline: none !important;
+    }
+    .stTextarea textarea::placeholder,
+    .stTextInput input::placeholder {
+        color: #475569 !important;
+    }
+
+    /* labels */
+    .stTextarea label,
+    .stTextInput label {
+        color: #94a3b8 !important;
+        font-family: 'Outfit', sans-serif !important;
+        font-size: 13px !important;
+        font-weight: 500 !important;
+        margin-bottom: 6px !important;
+    }
+
+    /* ─── Buttons ─── */
+    .stButton button {
+        background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
+        color: #fff !important;
+        border: none !important;
+        border-radius: 10px !important;
+        padding: 12px 28px !important;
+        font-family: 'Outfit', sans-serif !important;
+        font-size: 14px !important;
+        font-weight: 600 !important;
+        cursor: pointer;
+        transition: all 0.25s ease !important;
+        box-shadow: 0 4px 16px rgba(99,102,241,0.35);
+        letter-spacing: 0.3px;
+    }
+    .stButton button:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 6px 24px rgba(99,102,241,0.45) !important;
+    }
+    .stButton button:active {
+        transform: translateY(0px) !important;
+    }
+
+    /* ─── Response Box ─── */
+    .response-container {
+        background: linear-gradient(135deg, #141720, #12151e);
+        border: 1px solid rgba(99,102,241,0.2);
+        border-radius: 16px;
+        padding: 24px;
+        margin-top: 24px;
+        position: relative;
+        overflow: hidden;
+    }
+    .response-container::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, #6366f1, #8b5cf6, #06b6d4);
+    }
+    .response-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 16px;
+    }
+    .response-header .resp-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+    }
+    .response-header .resp-label {
+        font-size: 13px;
+        font-weight: 600;
+        color: #a5b4fc;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+    }
+    .response-body {
+        color: #cbd5e1;
+        font-size: 15px;
+        line-height: 1.75;
+        font-family: 'Outfit', sans-serif;
+        white-space: pre-wrap;
+    }
+
+    /* ─── Spinner override ─── */
+    .stSpinner {
+        color: #6366f1 !important;
+    }
+
+    /* ─── Warning ─── */
+    .stAlert {
+        border-radius: 10px !important;
+        border-left: 3px solid #f59e0b !important;
+        background: rgba(245,158,11,0.08) !important;
+        color: #fcd34d !important;
+    }
+
+    /* ─── Image Upload ─── */
+    .stFileUploader {
+        border: 2px dashed rgba(99,102,241,0.25) !important;
+        border-radius: 14px !important;
+        background: #0f1117 !important;
+        padding: 20px !important;
+        transition: border-color 0.3s;
+    }
+    .stFileUploader:hover {
+        border-color: rgba(99,102,241,0.5) !important;
+    }
+    .stFileUploader label {
+        color: #94a3b8 !important;
+        font-family: 'Outfit', sans-serif !important;
+    }
+    .stFileUploader .uploadedFileName {
+        color: #a5b4fc !important;
+    }
+
+    /* ─── Displayed image ─── */
+    .stImage img {
+        border-radius: 12px;
+        border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    /* ─── Selectbox ─── */
+    .stSelectbox select {
+        background: #0f1117 !important;
+        color: #e2e8f0 !important;
+        border: 1px solid rgba(255,255,255,0.1) !important;
+        border-radius: 10px !important;
+        font-family: 'Outfit', sans-serif !important;
+    }
+
+    /* ─── Sidebar nav overlay buttons (transparent, clickable layer) ─── */
+    .stSidebar .stButton button {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        color: transparent !important;
+        padding: 28px 0 !important;
+        width: 100% !important;
+        cursor: pointer;
+        position: relative;
+        z-index: 2;
+        margin-top: 0 !important;
+    }
+    .stSidebar .stButton button:hover {
+        background: rgba(255,255,255,0.03) !important;
+        transform: none !important;
+        box-shadow: none !important;
+    }
+
+    /* hide default streamlit footer */
+    .reportview-container .footer,
+    footer { display: none !important; }
+
+    /* hide hamburger menu */
+    #MainMenu { visibility: hidden; }
+
+    /* scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #0a0c0f; }
+    ::-webkit-scrollbar-thumb { background: #2d3148; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #3d4168; }
+
+    /* ─── Stats row ─── */
+    .stats-row {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 28px;
+    }
+    .stat-card {
+        flex: 1;
+        background: #141720;
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 12px;
+        padding: 16px 18px;
+    }
+    .stat-card .stat-value {
+        font-size: 22px;
+        font-weight: 700;
+        color: #a5b4fc;
+    }
+    .stat-card .stat-label {
+        font-size: 11px;
+        color: #64748b;
+        margin-top: 2px;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+    }
 </style>
 """, unsafe_allow_html=True)
 
-st.sidebar.title("🧠 AI Tools")
-page = st.sidebar.radio(
-    "Select Feature",
-    ["Chatbot", "Language Translation", "Image Analysis"]
-)
 
-st.sidebar.markdown("---")
-st.sidebar.caption("Powered by Groq LLaMA 3.3 70B")
+# ─── Sidebar ─────────────────────────────────────────────
+sidebar_html = """
+<div class="sidebar-brand">
+    <div class="brand-icon">🧠</div>
+    <div>
+        <div class="brand-text">NovaMind</div>
+        <div class="brand-sub">AI Assistant</div>
+    </div>
+</div>
+<div class="nav-section-label">Features</div>
+"""
+st.sidebar.markdown(sidebar_html, unsafe_allow_html=True)
 
+pages = {
+    "Chatbot": ("💬", "Chat with AI"),
+    "Language Translation": ("🌍", "Translate text"),
+    "Image Analysis": ("🖼️", "Analyze images"),
+}
+
+if "current_page" not in st.session_state:
+    st.session_state["current_page"] = "Chatbot"
+
+for page_name, (icon, desc) in pages.items():
+    is_active = st.session_state["current_page"] == page_name
+    active_class = "active" if is_active else ""
+    # Inject a styled HTML card, then a matching Streamlit button right below it
+    st.sidebar.markdown(f"""
+    <div class="nav-btn {active_class}" style="pointer-events:none; margin-bottom:-38px;">
+        <div class="nav-icon">{icon}</div>
+        <div>
+            <div style="font-size:14px; font-weight:600; color:{'#a5b4fc' if is_active else '#cbd5e1'};">{page_name}</div>
+            <div style="font-size:11px; color:#64748b;">{desc}</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    # Transparent overlay button that sits on top and captures the click
+    if st.sidebar.button(
+        f"{icon}  {page_name}",
+        key=f"nav_{page_name}",
+        use_container_width=True,
+    ):
+        st.session_state["current_page"] = page_name
+        st.rerun()
+
+page = st.session_state["current_page"]
+
+st.sidebar.markdown("""<div style="height:40px;"></div>""", unsafe_allow_html=True)
+st.sidebar.markdown("""
+<div class="model-badge" style="margin:0 20px; display:inline-flex; align-items:center; gap:6px; background:rgba(16,185,129,0.12); border:1px solid rgba(16,185,129,0.25); border-radius:20px; padding:6px 14px; font-size:11px; color:#34d399; font-weight:500;">
+    <div class="dot" style="width:7px;height:7px;border-radius:50%;background:#10b981;box-shadow:0 0 6px rgba(16,185,129,0.5);animation:pulse-dot 2s infinite;"></div>
+    LLaMA 3.3 70B — Online
+</div>
+""", unsafe_allow_html=True)
+
+
+# ─── Groq Chat Function ──────────────────────────────────
 def groq_chat(prompt):
     response = client.chat.completions.create(
         model="llama-3.3-70b-versatile",
@@ -52,64 +532,136 @@ def groq_chat(prompt):
     )
     return response.choices[0].message.content
 
+
+def render_response(title_icon, title, body):
+    """Render a styled response box"""
+    st.markdown(f"""
+    <div class="response-container">
+        <div class="response-header">
+            <div class="resp-icon">{title_icon}</div>
+            <div class="resp-label">{title}</div>
+        </div>
+        <div class="response-body">{body}</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+
+# ─── Pages ───────────────────────────────────────────────
 if page == "Chatbot":
-    st.markdown('<div class="main-title">💬 AI Chatbot</div>', unsafe_allow_html=True)
-    st.markdown('<div class="subtitle">Ask anything. Powered by LLaMA 3.3 70B</div>', unsafe_allow_html=True)
-    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown("""
+    <div class="page-header">
+        <div class="header-row">
+            <div class="header-icon-wrap icon-chat">💬</div>
+            <div>
+                <h1>AI Chatbot</h1>
+                <p>Ask anything — get intelligent, detailed answers instantly.</p>
+            </div>
+        </div>
+    </div>
+    <div class="stats-row">
+        <div class="stat-card"><div class="stat-value">70B</div><div class="stat-label">Model Params</div></div>
+        <div class="stat-card"><div class="stat-value">1024</div><div class="stat-label">Max Tokens</div></div>
+        <div class="stat-card"><div class="stat-value">0.4</div><div class="stat-label">Temperature</div></div>
+    </div>
+    """, unsafe_allow_html=True)
 
-    user_input = st.text_area("Enter your message", height=150)
+    st.markdown('<div class="input-card">', unsafe_allow_html=True)
+    user_input = st.text_area("Your message", placeholder="Ask me anything...", height=140, label_visibility="visible")
+    st.markdown('</div>', unsafe_allow_html=True)
 
-    if st.button("Generate Response"):
+    if st.button("✨ Generate Response", use_container_width=False):
         if user_input.strip():
             with st.spinner("Thinking..."):
                 answer = groq_chat(user_input)
-            st.markdown("### 🤖 Response")
-            st.write(answer)
+            render_response("🤖", "AI Response", answer)
         else:
-            st.warning("Please enter a message.")
+            st.warning("Please enter a message first.")
 
+# ─────────────────────────────────────────────────────────
 elif page == "Language Translation":
-    st.markdown('<div class="main-title">🌍 Language Translation</div>', unsafe_allow_html=True)
-    st.markdown('<div class="subtitle">Translate text into any language</div>', unsafe_allow_html=True)
-    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown("""
+    <div class="page-header">
+        <div class="header-row">
+            <div class="header-icon-wrap icon-translate">🌍</div>
+            <div>
+                <h1>Language Translation</h1>
+                <p>Translate text into any language with high accuracy.</p>
+            </div>
+        </div>
+    </div>
+    <div class="stats-row">
+        <div class="stat-card"><div class="stat-value">100+</div><div class="stat-label">Languages</div></div>
+        <div class="stat-card"><div class="stat-value">AI</div><div class="stat-label">Powered</div></div>
+        <div class="stat-card"><div class="stat-value">Fast</div><div class="stat-label">Response</div></div>
+    </div>
+    """, unsafe_allow_html=True)
 
-    text = st.text_area("Enter text to translate", height=120)
-    target_language = st.text_input("Target Language (e.g., French, Hindi, German)")
+    st.markdown('<div class="input-card">', unsafe_allow_html=True)
+    text = st.text_area("Text to translate", placeholder="Enter your text here...", height=120)
+    st.markdown('</div>', unsafe_allow_html=True)
 
-    if st.button("Translate"):
+    st.markdown('<div class="input-card">', unsafe_allow_html=True)
+    target_language = st.text_input("Target Language", placeholder="e.g. French, Hindi, German, Spanish...")
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    if st.button("🌐 Translate", use_container_width=False):
         if text and target_language:
-            prompt = f"Translate the following text into {target_language}:\n\n{text}"
+            prompt = f"Translate the following text into {target_language}. Only output the translated text, nothing else:\n\n{text}"
             with st.spinner("Translating..."):
                 translated = groq_chat(prompt)
-            st.markdown("### 🌐 Translated Text")
-            st.write(translated)
+            render_response("🌐", "Translated Text", translated)
         else:
-            st.warning("Please enter text and target language.")
+            st.warning("Please enter both text and a target language.")
 
+# ─────────────────────────────────────────────────────────
 elif page == "Image Analysis":
-    st.markdown('<div class="main-title">🖼️ Image Analysis</div>', unsafe_allow_html=True)
-    st.markdown('<div class="subtitle">Describe, analyze, or extract insights from images</div>', unsafe_allow_html=True)
-    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown("""
+    <div class="page-header">
+        <div class="header-row">
+            <div class="header-icon-wrap icon-image">🖼️</div>
+            <div>
+                <h1>Image Analysis</h1>
+                <p>Upload an image and extract detailed insights using AI.</p>
+            </div>
+        </div>
+    </div>
+    <div class="stats-row">
+        <div class="stat-card"><div class="stat-value">JPG</div><div class="stat-label">Supported</div></div>
+        <div class="stat-card"><div class="stat-value">PNG</div><div class="stat-label">Supported</div></div>
+        <div class="stat-card"><div class="stat-value">AI</div><div class="stat-label">Insights</div></div>
+    </div>
+    """, unsafe_allow_html=True)
 
-    uploaded_image = st.file_uploader("Upload an image", type=["jpg", "png", "jpeg"])
+    uploaded_image = st.file_uploader("Upload an image", type=["jpg", "png", "jpeg"], label_visibility="visible")
 
     if uploaded_image:
-        image = Image.open(uploaded_image)
-        st.image(image, caption="Uploaded Image", use_container_width=True)
+        col1, col2 = st.columns([1, 1], gap="large")
 
-        image_prompt = st.text_area(
-            "What do you want to know about this image?",
-            value="Describe this image in detail."
-        )
+        with col1:
+            image = Image.open(uploaded_image)
+            st.image(image, caption="Uploaded Image", use_container_width=True)
 
-        if st.button("Analyze Image"):
-            prompt = f"""
-            The user uploaded an image.
-            Task: {image_prompt}
-            Provide a detailed and professional response.
-            """
-            with st.spinner("Analyzing image..."):
-                result = groq_chat(prompt)
+        with col2:
+            st.markdown('<div class="input-card" style="height:100%; min-height:200px;">', unsafe_allow_html=True)
+            image_prompt = st.text_area(
+                "What do you want to know?",
+                value="Describe this image in detail.",
+                height=100
+            )
+            st.markdown('</div>', unsafe_allow_html=True)
 
-            st.markdown("### 🔍 Analysis Result")
-            st.write(result)
+            if st.button("🔍 Analyze Image", use_container_width=True):
+                prompt = f"""The user uploaded an image.
+Task: {image_prompt}
+Provide a detailed and professional response."""
+                with st.spinner("Analyzing image..."):
+                    result = groq_chat(prompt)
+                render_response("🔍", "Analysis Result", result)
+    else:
+        st.markdown("""
+        <div style="border:2px dashed rgba(99,102,241,0.2); border-radius:16px; padding:60px 30px; text-align:center; background:#0f1117;">
+            <div style="font-size:48px; margin-bottom:12px;">🖼️</div>
+            <div style="color:#64748b; font-size:15px;">Drop your image here or use the uploader above</div>
+            <div style="color:#475569; font-size:12px; margin-top:6px;">Supports JPG, PNG, JPEG</div>
+        </div>
+        """, unsafe_allow_html=True)
